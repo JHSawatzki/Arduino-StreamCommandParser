@@ -1,39 +1,39 @@
-# SerialCommands
-An Arduino library to tokenize and parse commands received over a serial port. 
+# StreamCommandParser
+An Arduino library to tokenize and parse commands received over a Stream (see https://www.arduino.cc/reference/en/language/functions/communication/stream/) type interface.
+
+Based on :
+https://github.com/ppedro74/Arduino-SerialCommands
 
 Inspired by (original version):
 https://github.com/scogswell/ArduinoSerialCommand
 
-This library is for handling text commands over a serial port.
+This library is for handling text commands over a Stream type interface.
 
 Goals:
 * Small footprint
 * No dynamic memory allocation
-* Stream class's Serial Ports
-* Multiple Serial Ports callback methods
+* Stream class's interfaces
+* Multiple interfaces callback methods
 * Custom Command termination default is `CR & LF`
 * Custom Arguments Delimeter default is `SPACE`
 * Optional _OneKey_ commands that are single characters without the need for
     additional command termination
 
-## SerialCommand object
+## StreamCommand object
 
-SerialCommand creates a binding between a const string token with a callback function.
+StreamCommand creates a binding between a const string token with a callback function.
 
 Note:
-SerialCommand is used in a Linked List. Do not share SerialCommand objects between SerialCommands.
+StreamCommand is used in a Linked List. Do not share StreamCommand objects between StreamCommandParser objects.
 
 ```c++
-#include <SerialCommands.h>
+#include <StreamCommand.h>
 
-void cmd_hello(SerialCommands* sender)
-{
-	//Do not use Serial.Print!
-	//Use sender->GetSerial this allows sharing the callback method with multiple Serial Ports
-	sender->GetSerial()->println("HELLO from arduino!");
+void cmd_hello(Stream& sender) {
+	sender.println("HELLO from arduino!");
 }
 
-SerialCommand cmd_hello_("hello", cmd_hello);
+StreamCommand cmd_hello_("hello", cmd_hello);
 ```
 
 ### OneKey commands
@@ -46,8 +46,8 @@ To make any command a _OneKey_ command, instantiate the command with a **single
 character** command string, and add `true` as a third argument:
 
 ```c++
-SerialCommand cmd_faster("+", cmd_faster, true);
-SerialCommand cmd_slower("-", cmd_slower, true);
+StreamCommand cmd_faster_("+", cmd_faster, true);
+StreamCommand cmd_slower_("-", cmd_slower, true);
 ```
 
 The `cmd_faster` and `cmd_slower` command functions has the same signature as
@@ -73,95 +73,87 @@ one key command first, which leaves the `p` as the remainder for the command
 which will not match (unless of course there *is* in fact a `p` one key or multi char
 command).
 
-## SerialCommands object
+## StreamCommandParser object
 
-SerialCommands is the main object creates a binding between a Serial Port and a list of SerialCommand
+StreamCommandParser is the main object creates a binding between a Stream type interface and a list of StreamCommand
 
 ```c++
-#include <SerialCommands.h>
+#include <StreamCommand.h>
 
-//Create a 32 bytes static buffer to be used exclusive by SerialCommands object.
+//Create a 32 bytes static buffer to be used exclusive by StreamCommandParser object.
 //The size should accomodate command token, arguments, termination sequence and string delimeter \0 char.
-char serial_command_buffer_[32];
+char stream_command_buffer_[32];
 
-//Creates SerialCommands object attached to Serial
-//working buffer = serial_command_buffer_
+//Creates StreamCommandParser object attached to Serial
+//working buffer = stream_commands_buffer_
 //command delimeter: Cr & Lf
 //argument delimeter: SPACE
-SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
+StreamCommandParser stream_command_parser_(&Serial, stream_commands_buffer_, sizeof(stream_commands_buffer_), "\r\n", " ");
 ```
 
 ### Arduino setup
 
 ```c++
-void setup() 
-{
-	Serial.begin(57600);
-	serial_commands_.AddCommand(&cmd_hello);
+void setup() {
+	Serial.begin(115200);
+	stream_command_parser_.AddCommand(&cmd_hello);
 }
 ```
 ### Default handler
 
 ```c++
-void cmd_unrecognized(SerialCommands* sender, const char* cmd)
-{
-	sender->GetSerial()->print("ERROR: Unrecognized command [");
-	sender->GetSerial()->print(cmd);
-	sender->GetSerial()->println("]");
+void cmd_unrecognized(Stream& sender, const char* cmd) {
+	sender.print("ERROR: Unrecognized command [");
+	sender.print(cmd);
+	sender.println("]");
 }
-void setup() 
-{
-	serial_commands_.SetDefaultHandler(&cmd_unrecognized);
+void setup() {
+	stream_command_parser_.SetDefaultHandler(&cmd_unrecognized);
 }
 ```
 ### Arduino loop
 
 ```c++
-void loop() 
-{
-	serial_commands_.ReadSerial();
+void loop() {
+	stream_command_parser_.ReadSerial();
 }
 ```
 
 ### Multiple Serial Ports
 ```c++
-#include <SerialCommands.h>
+#include <StreamCommandParser.h>
 
-char serial_commands_0_buffer_[32];
-SerialCommands serial_commands_0_(&Serial, serial_commands_0_buffer_, sizeof(serial_commands_0_buffer_));
+char stream_commands_0_buffer_[32];
+StreamCommandParser stream_command_parser_0_(&Serial, stream_commands_0_buffer_, sizeof(stream_commands_0_buffer_));
 
-char serial_commands_1_buffer_[32];
-SerialCommands serial_commands_1_(&Serial1, serial_commands_1_buffer_, sizeof(serial_commands_1_buffer_));
+char stream_commands_1_buffer_[32];
+StreamCommandParser stream_command_parser_1_(&Serial1, stream_commands_1_buffer_, sizeof(stream_commands_1_buffer_));
 
-void cmd_hello(SerialCommands* sender)
-{
-	sender->GetSerial()->println("HELLO from arduino!");
+void cmd_hello(Stream& sender) {
+	sender.println("HELLO from arduino!");
 }
 
-void cmd_unrecognized(SerialCommands* sender, const char* cmd)
-{
-	sender->GetSerial()->print("ERROR: Unrecognized command [");
-	sender->GetSerial()->print(cmd);
-	sender->GetSerial()->println("]");
+void cmd_unrecognized(Stream& sender, const char* cmd) {
+	sender.print("ERROR: Unrecognized command [");
+	sender.print(cmd);
+	sender.println("]");
 }
 
 SerialCommand cmd_hello_0_("hello", cmd_hello);
 SerialCommand cmd_hello_1_("hello", cmd_hello);
 
-void setup() 
-{
-    Serial.begin(57600);
-	serial_commands_0_.AddCommand(&cmd_hello_0_);
-	serial_commands_0_.SetDefaultHandler(&cmd_hello);
+void setup() {
+    Serial.begin(115200);
+	stream_command_parser_0_.AddCommand(&cmd_hello_0_);
+	stream_command_parser_0_.SetDefaultHandler(&cmd_hello);
 	
-    Serial1.begin(57600);
-	serial_commands_1_.AddCommand(&cmd_hello_1_);
-	serial_commands_1_.SetDefaultHandler(&cmd_hello);
+    Serial1.begin(115200);
+	stream_command_parser_1_.AddCommand(&cmd_hello_1_);
+	stream_command_parser_1_.SetDefaultHandler(&cmd_hello);
 }
 
-void loop() 
-{
-	serial_commands_0_.ReadSerial();
-	serial_commands_1_.ReadSerial();
+void loop() {
+	stream_command_parser_0_.ReadSerial();
+	stream_command_parser_1_.ReadSerial();
 }
 ```
