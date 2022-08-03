@@ -15,25 +15,23 @@ const int kGreenLedPin = 5;
 const int kBlueLedPin = 9;
 
 char serial_command_buffer_[32];
-SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
+SerialCommands serial_commands_(serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 
 //This is the default handler, and gets called when no other command matches. 
-void cmd_unrecognized(SerialCommands* sender, const char* cmd)
-{
-	sender->GetSerial()->print("Unrecognized command [");
-	sender->GetSerial()->print(cmd);
-	sender->GetSerial()->println("]");
+void cmd_unrecognized(Stream& sender, ErrorCode, const char* command) {
+	sender.print("Unrecognized command [");
+	sender.print(cmd);
+	sender.println("]");
 }
 
 //expects one single parameter
-void cmd_analog_read(SerialCommands* sender)
-{
+void cmd_analog_read(SerialCommands* sender) {
 	//Note: Every call to Next moves the pointer to next parameter
 
 	char* port_str = sender->Next();
 	if (port_str == NULL)
 	{
-		sender->GetSerial()->println("ERROR NO_PORT");
+		sender.println("ERROR NO_PORT");
 		return;
 	}
 
@@ -52,11 +50,11 @@ void cmd_analog_read(SerialCommands* sender)
 			break;
 	}
 	
-	sender->GetSerial()->print("ANALOG_READ ");
-	sender->GetSerial()->print(port);
-	sender->GetSerial()->print(" ");
-	sender->GetSerial()->print(value);
-	sender->GetSerial()->println();
+	sender.print("ANALOG_READ ");
+	sender.print(port);
+	sender.print(" ");
+	sender.print(value);
+	sender.println();
 }
 
 //helper function pass led string (lower case) and pwm value
@@ -112,7 +110,7 @@ void cmd_rgb_led(SerialCommands* sender)
 	char* pwm_str = sender->Next();
 	if (pwm_str == NULL)
 	{
-		sender->GetSerial()->println("ERROR NO_PWM");
+		sender.println("ERROR NO_PWM");
 		return;
 	}
 	int pwm = atoi(pwm_str);
@@ -122,15 +120,15 @@ void cmd_rgb_led(SerialCommands* sender)
 	{
 		if (set_led(led_str, pwm))
 		{
-			sender->GetSerial()->print("LED_STATUS ");
-			sender->GetSerial()->print(led_str);
-			sender->GetSerial()->print(" ");
-			sender->GetSerial()->println(pwm);
+			sender.print("LED_STATUS ");
+			sender.print(led_str);
+			sender.print(" ");
+			sender.println(pwm);
 		}
 		else
 		{
-			sender->GetSerial()->print("ERROR ");
-			sender->GetSerial()->println(led_str);
+			sender.print("ERROR ");
+			sender.println(led_str);
 		}
 	}
 }

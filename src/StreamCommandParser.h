@@ -1,101 +1,79 @@
 /*--------------------------------------------------------------------
-Author		: Pedro Pereira
+Author		: Jan Henrik Sawatzki
 License		: BSD
-Repository	: https://github.com/ppedro74/Arduino-SerialCommands
+Repository	: https://github.com/JHSawatzki/Arduino-StreamCommandParser
 --------------------------------------------------------------------*/
 
-//#define SERIAL_COMMANDS_DEBUG
+//#define STREAM_COMMAND_PARSER_DEBUG
 
-#ifndef SERIAL_COMMANDS_H
-#define SERIAL_COMMANDS_H
+#ifndef STREAM_COMMAND_PARSER_H
+#define STREAM_COMMAND_PARSER_H
 
 #include <Arduino.h>
 
-typedef enum ternary 
-{
-	SERIAL_COMMANDS_SUCCESS = 0,
-	SERIAL_COMMANDS_ERROR_NO_SERIAL,
-	SERIAL_COMMANDS_ERROR_BUFFER_FULL
-} SERIAL_COMMANDS_ERRORS;
+//Do nothing function
+void DefaultErrorHandler(Stream& sender, ErrorCode, const char* command) {}
 
-class SerialCommands;
+class StreamCommandParser;
 
-typedef class SerialCommand SerialCommand;
-class SerialCommand
-{
+typedef class StreamCommand StreamCommand;
+class StreamCommand {
 public:
-	SerialCommand(const char* cmd, void(*func)(SerialCommands*), bool one_k=false)
-		: command(cmd),
-		function(func),
-		next(NULL),
-		one_key(one_k)
-	{
+	StreamCommand(const char* cmd, void(*func)(Stream&, StreamCommandParser*)) : command(cmd), function(func), next(NULL)) {
 	}
 
 	const char* command;
-	void(*function)(SerialCommands*);
-	SerialCommand* next;
-	bool one_key;
+	void(*function)(Stream&, StreamCommandParser*);
+	StreamCommand* next;
 };
 
-class SerialCommands
-{
+class StreamCommandParser {
 public:
-	SerialCommands(Stream* serial, char* buffer, int16_t buffer_len, const char* term = "\r\n", const char* delim = " ") :
-		serial_(serial),
+	StreamCommandParser(char* buffer, int16_t buffer_len, const char* term = "\r\n", const char* delim = " ") :
 		buffer_(buffer),
 		buffer_len_(buffer!=NULL && buffer_len > 0 ? buffer_len - 1 : 0), //string termination char '\0'
 		term_(term),
 		delim_(delim),
-		default_handler_(NULL),
+		error_handler_(DefaultErrorHandler),
 		buffer_pos_(0),
 		last_token_(NULL), 
 		term_pos_(0),
 		commands_head_(NULL),
 		commands_tail_(NULL),
-		onek_cmds_head_(NULL),
-		onek_cmds_tail_(NULL),
-		commands_count_(0),
-		onek_cmds_count_(0)
+		commands_count_(0)
 	{
 	}
-
 
 	/**
 	 * \brief Adds a command handler (Uses a linked list)
 	 * \param command 
 	 */
-	void AddCommand(SerialCommand* command);
+	void AddCommand(StreamCommand* command);
 
 	/**
 	 * \brief Checks the Serial port, reads the input buffer and calls a matching command handler.
 	 * \return SERIAL_COMMANDS_SUCCESS when successful or SERIAL_COMMANDS_ERROR_XXXX on error.
 	 */
-	SERIAL_COMMANDS_ERRORS ReadSerial();
+	void ProcessInput(Stream& sender, unsinged long timeout);
 
-	/**
-	 * \brief Returns the source stream (Serial port)
-	 * \return 
-	 */
-	Stream* GetSerial();
-	
-	/**
-	 * \brief Attaches a Serial Port to this object 
-	 * \param serial 
-	 */
-	void AttachSerial(Stream* serial);
-	
-	/**
-	 * \brief Detaches the serial port, if no serial port nothing will be done at ReadSerial
-	 */
-	void DetachSerial();
-	
 	/**
 	 * \brief Sets a default handler can be used for a catch all or unrecognized commands
 	 * \param function 
 	 */
-	void SetDefaultHandler(void(*function)(SerialCommands*, const char*));
+	void SetErrorHandler(void(*function)(Stream&, ErrorCode, const char*));
 	
+	///Error codes.
+	enum class ErrorCode{
+		///No error
+		NoError,
+		///Unknown command received.
+		UnknownCommand,
+		///Timeout before receiving the termination chars.
+		Timeout,
+		///Message buffer overflow.
+		BufferOverflow,
+	};
+
 	/**
 	 * \brief Clears the buffer, and resets the indexes.
 	 */
@@ -108,28 +86,17 @@ public:
 	char* Next();
 
 private:
-	Stream* serial_;
 	char* buffer_;
 	int16_t buffer_len_;
 	const char* term_;
 	const char* delim_;
-	void(*default_handler_)(SerialCommands*, const char*);
+	void(*error_handler_)(Stream&, ErrorCode, const char*);
 	int16_t buffer_pos_;
 	char* last_token_;
 	int8_t term_pos_;
-	SerialCommand* commands_head_;
-	SerialCommand* commands_tail_;
-	SerialCommand* onek_cmds_head_;
-	SerialCommand* onek_cmds_tail_;
+	StreamCommand* commands_head_;
+	StreamCommand* commands_tail_;
 	uint8_t commands_count_;
-	uint8_t onek_cmds_count_;
-
-	/**
-	 * \brief Tests for any one_key command and execute it if found
-	 * \return false if this was not a one_key command, true otherwise with
-	 *		   also clearing the buffer
-	 **/
-	bool CheckOneKeyCmd();
 };
 
 #endif

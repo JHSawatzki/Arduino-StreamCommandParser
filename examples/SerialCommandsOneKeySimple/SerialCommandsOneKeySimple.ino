@@ -25,23 +25,23 @@ SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_c
 // Note: It does not get called for one_key commands that do not match
 void cmd_unrecognized(SerialCommands* sender, const char* cmd)
 {
-  sender->GetSerial()->print("Unrecognized command [");
-  sender->GetSerial()->print(cmd);
-  sender->GetSerial()->println("]");
+  sender.print("Unrecognized command [");
+  sender.print(cmd);
+  sender.println("]");
 }
 
 //called for ON command, or one_key '1' command
 void cmd_led_on(SerialCommands* sender)
 {
   digitalWrite(kLedPin, HIGH);  
-  sender->GetSerial()->println("Led is on");
+  sender.println("Led is on");
 }
 
 //called for OFF command, or one_key '0' command
 void cmd_led_off(SerialCommands* sender)
 {
   digitalWrite(kLedPin, LOW);  
-  sender->GetSerial()->println("Led is off");
+  sender.println("Led is off");
 }
 
 //Note: Commands are case sensitive

@@ -21,23 +21,23 @@ SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_c
 //This is the default handler, and gets called when no other command matches. 
 void cmd_unrecognized(SerialCommands* sender, const char* cmd)
 {
-  sender->GetSerial()->print("Unrecognized command [");
-  sender->GetSerial()->print(cmd);
-  sender->GetSerial()->println("]");
+  sender.print("Unrecognized command [");
+  sender.print(cmd);
+  sender.println("]");
 }
 
 //called for ON command
 void cmd_led_on(SerialCommands* sender)
 {
   digitalWrite(kLedPin, HIGH);  
-  sender->GetSerial()->println("Led is on");
+  sender.println("Led is on");
 }
 
 //called for OFF command
 void cmd_led_off(SerialCommands* sender)
 {
   digitalWrite(kLedPin, LOW);  
-  sender->GetSerial()->println("Led is off");
+  sender.println("Led is off");
 }
 
 //Note: Commands are case sensitive

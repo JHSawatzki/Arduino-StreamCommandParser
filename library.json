@@ -1,19 +1,19 @@
 {
-    "name": "SerialCommands",
+    "name": "StreamCommandParser",
     "authors":
     {
-        "name": "Pedro Tiago Pereira",
-        "email": "tiago.private@gmail.com",
-        "url": "https://github.com/ppedro74"
+        "name": "Jan Henrik Sawatzki",
+        "email": "",
+        "url": "https://github.com/JHSawatzki"
     },
     "keywords": "serial, command, commands, cmd, parse, callback",
-    "description": "A Library to tokenize and parse commands received over a serial port. Simple and small memory footprint (no dynamic memory allocation)",
+    "description": "A Library to tokenize and parse commands received from a Stream type interface. Simple and small memory footprint (no dynamic memory allocation)",
     "repository":
     {
         "type": "git",
-        "url": "https://github.com/ppedro74/Arduino-SerialCommands.git"
+        "url": "https://github.com/JHSawatzki/Arduino-StreamCommandParser.git"
     },
-    "version": "2.2.0",
+    "version": "0.1.0",
     "frameworks": "arduino",
     "platforms": "*"
 }

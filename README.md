@@ -145,11 +145,11 @@ SerialCommand cmd_hello_1_("hello", cmd_hello);
 void setup() {
     Serial.begin(115200);
 	stream_command_parser_0_.AddCommand(&cmd_hello_0_);
-	stream_command_parser_0_.SetDefaultHandler(&cmd_hello);
+	stream_command_parser_0_.SetDefaultHandler(&cmd_unrecognized);
 	
     Serial1.begin(115200);
 	stream_command_parser_1_.AddCommand(&cmd_hello_1_);
-	stream_command_parser_1_.SetDefaultHandler(&cmd_hello);
+	stream_command_parser_1_.SetDefaultHandler(&cmd_unrecognized);
 }
 
 void loop() {
