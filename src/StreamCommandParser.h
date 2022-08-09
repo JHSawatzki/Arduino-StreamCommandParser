@@ -10,6 +10,10 @@ Repository	: https://github.com/JHSawatzki/Arduino-StreamCommandParser
 #define STREAM_COMMAND_PARSER_H
 
 #include <Arduino.h>
+
+#include "MurmurHash3.h"
+
+#define STREAM_COMMAND_PARSER_HASH_SEED 45823  
 	
 ///Error codes.
 enum class StreamCommandParserErrorCode{
@@ -31,6 +35,7 @@ public:
 	StreamCommand(const char* cmd, void(*func)(arduino::Stream&, StreamCommandParser*));
 
 	const char* command;
+	uint32_t hash;
 	void(*function)(arduino::Stream&, StreamCommandParser*);
 	StreamCommand* next;
 };

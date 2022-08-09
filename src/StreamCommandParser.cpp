@@ -8,6 +8,7 @@ Repository	: https://github.com/JHSawatzki/Arduino-StreamCommandParser
 
 StreamCommand::StreamCommand(const char* cmd, void(*func)(arduino::Stream&, StreamCommandParser*)) {
 	command = cmd;
+	hash = MurmurHash3_x86_32(STREAM_COMMAND_PARSER_HASH_SEED, &command, sizeof(command));
 	function = func;
 	next = NULL;
 }
@@ -53,11 +54,12 @@ void StreamCommandParser::Execute(Stream& sender, char* message) {
 	while (message_token != NULL) {
 		char* command = strtok_r(message_token, param_delim_, &last_param_token_);
 		if (command != NULL) {
+			uint32_t hash = MurmurHash3_x86_32(STREAM_COMMAND_PARSER_HASH_SEED, &command, sizeof(command));
 			boolean matched = false;
-			int cx;
 			StreamCommand* cmd;
-			for (cmd = commands_head_, cx = 0; cmd != NULL; cmd = cmd->next, cx++) {
-				if (strncmp(command, cmd->command, strlen(cmd->command) + 1) == 0) {
+			for (cmd = commands_head_; cmd != NULL; cmd = cmd->next) {
+				//if (strncmp(command, cmd->command, strlen(cmd->command) + 1) == 0) {
+				if (hash == cmd->hash) {
 					cmd->function(sender, this);
 					matched = true;
 					break;
@@ -127,13 +129,14 @@ const char* StreamCommandParser::Terminator() {
 
 void StreamCommandParser::PrintDebugInfo(arduino::Stream& interface) {
 	interface.println("*** StreamCommandParser DEBUG INFO ***");
-	interface.print("Commands stored: ");
+	interface.print("Commands stored:\t");
 	interface.println(commands_count_);
 	StreamCommand* cmd;
 	for (cmd = commands_head_; cmd != NULL; cmd = cmd->next) {
-		interface.print("  ");
+		interface.print("\t");
+		interface.print(cmd->hash);
+		interface.print("\t");
 		interface.println(cmd->command);
-		interface.flush();
 	}
 	interface.println();
 	interface.println("*******************");
