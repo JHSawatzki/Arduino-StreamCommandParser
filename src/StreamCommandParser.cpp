@@ -8,7 +8,7 @@ Repository	: https://github.com/JHSawatzki/Arduino-StreamCommandParser
 
 StreamCommand::StreamCommand(const char* cmd, void(*func)(arduino::Stream&, StreamCommandParser*)) {
 	command = cmd;
-	hash = MurmurHash3_x86_32(STREAM_COMMAND_PARSER_HASH_SEED, &command, sizeof(command));
+	hash = rokkit(command, strlen(command));
 	function = func;
 	next = NULL;
 }
@@ -54,7 +54,7 @@ void StreamCommandParser::Execute(Stream& sender, char* message) {
 	while (message_token != NULL) {
 		char* command = strtok_r(message_token, param_delim_, &last_param_token_);
 		if (command != NULL) {
-			uint32_t hash = MurmurHash3_x86_32(STREAM_COMMAND_PARSER_HASH_SEED, &command, sizeof(command));
+			uint32_t hash = hash = rokkit(command, strlen(command));
 			boolean matched = false;
 			StreamCommand* cmd;
 			for (cmd = commands_head_; cmd != NULL; cmd = cmd->next) {
@@ -76,9 +76,9 @@ void StreamCommandParser::Execute(Stream& sender, char* message) {
 void StreamCommandParser::ProcessInput(Stream& sender, uint32_t timeout) {
 	uint32_t time_checker = 0;
 	while (sender.available()) {
-   		time_checker = millis();
+		time_checker = millis();
 		buffer_[buffer_pos_] = sender.read();
-    	++buffer_pos_;
+		++buffer_pos_;
 		if (buffer_pos_ >= buffer_len_){
 			//Call ErrorHandler due to BufferOverflow
 			(*error_handler_)(sender, StreamCommandParserErrorCode::BufferOverflow, buffer_);
@@ -96,8 +96,13 @@ void StreamCommandParser::ProcessInput(Stream& sender, uint32_t timeout) {
 	}
 	//No more chars aviable yet
 
+	if (time_checker == 0) {
+		// No data available
+		return;
+	}
+
 	//Check for communication timeout
-	if ((millis() - time_checker) > timeout) {
+	if (millis() - time_checker > timeout) {
 		//Call ErrorHandler due Timeout
 		(*error_handler_)(sender, StreamCommandParserErrorCode::Timeout, buffer_);
 		ClearBuffer();
