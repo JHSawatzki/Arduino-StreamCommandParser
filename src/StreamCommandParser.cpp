@@ -58,7 +58,6 @@ void StreamCommandParser::Execute(Stream& sender, char* message) {
 			boolean matched = false;
 			StreamCommand* cmd;
 			for (cmd = commands_head_; cmd != NULL; cmd = cmd->next) {
-				//if (strncmp(command, cmd->command, strlen(cmd->command) + 1) == 0) {
 				if (hash == cmd->hash) {
 					cmd->function(sender, this);
 					matched = true;

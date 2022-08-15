@@ -11,9 +11,7 @@ Repository	: https://github.com/JHSawatzki/Arduino-StreamCommandParser
 
 #include <Arduino.h>
 
-#include "MurmurHash3.h"
-
-#define STREAM_COMMAND_PARSER_HASH_SEED 45823  
+#include <RokkitHash.h>
 	
 ///Error codes.
 enum class StreamCommandParserErrorCode{
