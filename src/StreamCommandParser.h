@@ -11,7 +11,7 @@ Repository	: https://github.com/JHSawatzki/Arduino-StreamCommandParser
 
 #include <Arduino.h>
 
-#include <RokkitHash.h>
+#include "RokkitHash.h"
 	
 ///Error codes.
 enum class StreamCommandParserErrorCode{
