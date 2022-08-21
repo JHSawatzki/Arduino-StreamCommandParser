@@ -6,6 +6,9 @@ Repository	: https://github.com/JHSawatzki/Arduino-StreamCommandParser
 
 #include "StreamCommandParser.h"
 
+//#include <Arduino_MachineControl.h>
+//using namespace machinecontrol;
+
 StreamCommand::StreamCommand(const char* cmd, void(*func)(arduino::Stream&, StreamCommandParser*)) {
 	command = cmd;
 	hash = rokkit(command, strlen(command));
@@ -52,12 +55,31 @@ void StreamCommandParser::AddCommand(StreamCommand* command) {
 void StreamCommandParser::Execute(Stream& sender, char* message) {
 	char* message_token = strtok_r(message, message_delim_, &last_message_token_);
 	while (message_token != NULL) {
+		//comm_protocols.rs485.beginTransmission();
+		//comm_protocols.rs485.print("Message token: ");
+		//comm_protocols.rs485.println(message_token);
+		//comm_protocols.rs485.endTransmission();
 		char* command = strtok_r(message_token, param_delim_, &last_param_token_);
 		if (command != NULL) {
+			//comm_protocols.rs485.beginTransmission();
+			//comm_protocols.rs485.print("Command: ");
+			//comm_protocols.rs485.println(command);
+			//comm_protocols.rs485.endTransmission();
 			uint32_t hash = hash = rokkit(command, strlen(command));
 			boolean matched = false;
 			StreamCommand* cmd;
 			for (cmd = commands_head_; cmd != NULL; cmd = cmd->next) {
+				//comm_protocols.rs485.beginTransmission();
+				//comm_protocols.rs485.print(String(strlen(command)));
+				//comm_protocols.rs485.print(" vs ");
+				//comm_protocols.rs485.println(String(strlen(cmd->command)));
+				//comm_protocols.rs485.print(String(hash));
+				//comm_protocols.rs485.print(" vs ");
+				//comm_protocols.rs485.println(String(cmd->hash));
+				//comm_protocols.rs485.print(command);
+				//comm_protocols.rs485.print(" vs ");
+				//comm_protocols.rs485.println(cmd->command);
+				//comm_protocols.rs485.endTransmission();
 				if (hash == cmd->hash) {
 					cmd->function(sender, this);
 					matched = true;
