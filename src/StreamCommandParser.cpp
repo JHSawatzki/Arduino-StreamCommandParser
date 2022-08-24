@@ -65,7 +65,7 @@ void StreamCommandParser::Execute(Stream& sender, char* message) {
 			//comm_protocols.rs485.print("Command: ");
 			//comm_protocols.rs485.println(command);
 			//comm_protocols.rs485.endTransmission();
-			uint32_t hash = hash = rokkit(command, strlen(command));
+			uint32_t hash = rokkit(command, strlen(command));
 			boolean matched = false;
 			StreamCommand* cmd;
 			for (cmd = commands_head_; cmd != NULL; cmd = cmd->next) {
